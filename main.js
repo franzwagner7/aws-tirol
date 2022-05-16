@@ -79,6 +79,6 @@ async function loadData(url) {
     
  
 
-    // Wetterstationen mit Icons und Popups implementieren
+    // Wetterstationen mit Icons und Popups implementiere
 }
 loadData("https://static.avalanche.report/weather_stations/stations.geojson");
