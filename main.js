@@ -15,7 +15,7 @@ let startLayer = L.tileLayer("https://static.avalanche.report/tms/{z}/{x}/{y}.we
 let overlays = {
     stations: L.featureGroup(),
     temperature: L.featureGroup(),
-    humidity: L.featureGroup(),
+    precipitation: L.featureGroup(),
     snowheight: L.featureGroup(),
     wind: L.featureGroup(),
 };
@@ -36,7 +36,7 @@ let layerControl = L.control.layers({
 }, {
     "Wetterstationen": overlays.stations,
     "Temperatur": overlays.temperature,
-    "Relative Luftfeuchtigkeit": overlays.humidity,
+    "Niederschlag": overlays.precipitation,
     "Schneehöhe": overlays.snowheight,
     "Wind": overlays.wind
 }).addTo(map);
@@ -52,161 +52,33 @@ L.control.scale({
 // Fullscreen control
 L.control.fullscreen().addTo(map);
 
-// diese Layer beim Laden anzeigen
+// Wetterstationslayer beim Laden anzeigen
 overlays.stations.addTo(map);
-
-
-// Farbe eritteln für draw Temperature
-let getColor = function(value, ramp){
-    for (let rule of ramp){
-        if(value >= rule.min && value < rule.max){
-            return rule.color; 
-        }
-    }
-}
- 
-// Stationen
-let drawStations = function (geojson) {
-    // Wetterstationen mit Icons und Popups implementieren
-    L.geoJson(geojson, {
-        pointToLayer: function (geoJsonPoint, latlng) {
-            let popup = `
-                <strong>${geoJsonPoint.properties.name}</strong><br>
-                (${geoJsonPoint.geometry.coordinates[2]} m ü.d.M.)<br>
-                Temperatur: ${geoJsonPoint.properties.LT} °C
-                <br>
-                Schneehöhe: ${geoJsonPoint.properties.HS} cm
-                <br>
-                Windgeschwindigkeit: ${(geoJsonPoint.properties.WG * 3600) / 1000} km/h 
-                <br>
-                Windrichtung: ${geoJsonPoint.properties.WR}°
-                <br>
-                Relative Luftfeuchtigkeit: ${geoJsonPoint.properties.RH} %
-                <br> 
-                ${geojson.plot()}
-            `;
-            return L.marker(latlng, {
-                icon: L.icon({
-                    iconUrl: `icons/wifi.png`,
-                    iconAnchor: [16, 37],
-                    popupAnchor: [0, -37]
-                })
-            }).bindPopup(popup);
-        }
-    }).addTo(overlays.stations);
-}
-
-// Temperatur 
-let drawTemperature = function (geojson) {
-    L.geoJson(geojson, {
-        filter: function(geoJsonPoint){
-            // return geoJsonPoint.properties.LT > -50 && geoJsonPoint.properties.LT < 50;
-            return isFinite (geoJsonPoint.properties.LT); 
-        },
-        pointToLayer: function (geoJsonPoint, latlng) {
-            let popup = `
-                <strong>${geoJsonPoint.properties.name}</strong><br>
-                (${geoJsonPoint.geometry.coordinates[2]} m ü.d.M.)
-            `;
-            let color = getColor(geoJsonPoint.properties.LT, COLORS.temperature); 
-
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    className: "aws-div-icon",
-                    html: `<span style="background-color:${color}">${geoJsonPoint.properties.LT.toFixed(1)}</span>`
-                })
-            }).bindPopup(popup);
-        }
-    }).addTo(overlays.temperature);
-}
-
-// Schneehöhen 
-let drawSnowheight = function(geojson){
-    L.geoJson(geojson, {
-        filter: function(geoJsonPoint){
-            return geoJsonPoint.properties.HS >= 0 && geoJsonPoint.properties.HS < 400000;
-        },
-        pointToLayer: function (geoJsonPoint, latlng) {
-            let popup = `
-                <strong>${geoJsonPoint.properties.name}</strong><br>
-                (${geoJsonPoint.geometry.coordinates[2]} m ü.d.M.)
-            `;
-            let color = getColor(geoJsonPoint.properties.HS, COLORS.height); 
-
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    className: "aws-div-icon",
-                    html: `<span style="background-color:${color}">${geoJsonPoint.properties.HS.toFixed(1)}</span>`
-                })
-            }).bindPopup(popup);
-        }
-    }).addTo(overlays.snowheight);
-}
-
-// Wind 
-let drawWind = function(geojson) {
-    L.geoJson(geojson, {
-        filter: function(geoJsonPoint){
-            return geoJsonPoint.properties.WG > 0 && geoJsonPoint.properties.WG < 1000 && geoJsonPoint.properties.WR > 0;
-           
-        },
-        pointToLayer: function (geoJsonPoint, latlng) {
-            let popup = `
-                <strong>${geoJsonPoint.properties.name}</strong><br>
-                (${geoJsonPoint.geometry.coordinates[2]} m ü.d.M.)
-            `;
-            let color = getColor(geoJsonPoint.properties.WG, COLORS.windspeed); 
-
-
-
-            let deg = geoJsonPoint.properties.WR
-
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    className: "aws-div-icon",
-                    html: `<span style="background-color:${color}; transform: rotate(${deg}deg)"><i class="fa-solid fa-circle-arrow-up"></i>${geoJsonPoint.properties.WG.toFixed(1)}</span>`
-                })
-            }).bindPopup(popup);
-        }
-    }).addTo(overlays.wind);
-}
-
-// Wind 
-let drawRH = function(geojson) {
-    L.geoJson(geojson, {
-        filter: function(geoJsonPoint){
-            return geoJsonPoint.properties.RH > 0 && geoJsonPoint.properties.RH < 1000;
-           
-        },
-        pointToLayer: function (geoJsonPoint, latlng) {
-            let popup = `
-                <strong>${geoJsonPoint.properties.name}</strong><br>
-                (${geoJsonPoint.geometry.coordinates[2]} m ü.d.M.)
-            `;
-            let color = getColor(geoJsonPoint.properties.RH, COLORS.humidity); 
-
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    className: "aws-div-icon",
-                    html: `<span style="background-color:${color}">${geoJsonPoint.properties.RH.toFixed(1)}</span>`
-                })
-            }).bindPopup(popup);
-        }
-    }).addTo(overlays.humidity);
-}
-
-
-
 
 // Wetterstationen
 async function loadData(url) {
     let response = await fetch(url);
     let geojson = await response.json();
 
-    drawStations(geojson);
-    drawTemperature(geojson);
-    drawSnowheight(geojson); 
-    drawWind(geojson);
-    drawRH(geojson);  
+    L.geoJSON(geojson, {
+        pointToLayer: function (geoJsonPoint, latlng) {
+            let popup = `
+                <strong>Station: ${geoJsonPoint.properties.name}</strong>
+                <hr>
+                Seehöhe: ${geoJsonPoint.geometry.coordinates[2]} (m)<br>
+            `;
+            return L.marker(latlng, {
+                icon: L.icon({
+                    iconUrl: "icons/wifi.png",
+                    iconAnchor: [16, 37],
+                    popupAnchor: [0, -37]
+                })
+            }).bindPopup(popup);
+        }
+    }).addTo(overlays.stations)
+    
+ 
+
+    // Wetterstationen mit Icons und Popups implementiere
 }
 loadData("https://static.avalanche.report/weather_stations/stations.geojson");
