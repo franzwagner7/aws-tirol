@@ -83,11 +83,10 @@ let drawStations = function (geojson) {
                 <br>
                 Relative Luftfeuchtigkeit: ${geoJsonPoint.properties.RH} %
                 <br> 
-                ${geojson.plot()}
             `;
             return L.marker(latlng, {
                 icon: L.icon({
-                    iconUrl: `icons/wifi.png`,
+                    iconUrl: "icons/wifi.png",
                     iconAnchor: [16, 37],
                     popupAnchor: [0, -37]
                 })
