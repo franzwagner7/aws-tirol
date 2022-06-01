@@ -35,10 +35,10 @@ let layerControl = L.control.layers({
     "Esri World Imagery": L.tileLayer.provider("Esri.WorldImagery"),
 }, {
     "Wetterstationen": overlays.stations,
-    "Temperatur": overlays.temperature,
-    "Relative Luftfeuchtigkeit": overlays.humidity,
-    "Schneehöhe": overlays.snowheight,
-    "Wind": overlays.wind
+    "Lufttemperatur (°C)": overlays.temperature,
+    "Schneehöhe (cm)": overlays.snowheight,
+    "Windgeschwindigkeit (km/h)": overlays.wind,
+    "Relative Luftfeuchtigkeit (%)": overlays.humidity,
 }).addTo(map);
 
 // Layer control ausklappen
